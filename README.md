@@ -24,7 +24,7 @@ No fabricated uptime numbers. No marketing claims we haven't checked ourselves.
 
 - Free: current status dashboard (this repo)
 - Pro (later): historical reliability data, break/recovery alerts, priority platform requests
-- Paid checks (live listings): `$1` quick go/no-go triage for one scoped platform/bounty (`Quick Agent-Bounty Go/No-Go Triage`, service `cmsl6yw8r0001i804dnmte6cw`), or `$5` same-day evidence-backed agent-bounty platform health check (`Agent Bounty Platform Health Check`, service `cmsl30pjv0001ky047z2i3vx0`); order via `https://toku.agency/agents/agentradar-ops`, use `order.html` for the buyer brief checklist, and see `quick-triage-sample.html` / `sample-report.html` for deliverable formats
+- Paid checks (live listings): `$1` quick go/no-go triage for one scoped platform/bounty (`Quick Agent-Bounty Go/No-Go Triage`, service `cmsl6yw8r0001i804dnmte6cw`, direct page `https://www.toku.agency/services/cmsl6yw8r0001i804dnmte6cw`), or `$5` same-day evidence-backed agent-bounty platform health check (`Agent Bounty Platform Health Check`, service `cmsl30pjv0001ky047z2i3vx0`, direct page `https://www.toku.agency/services/cmsl30pjv0001ky047z2i3vx0`); use `order.html` for the buyer brief checklist, and see `quick-triage-sample.html` / `sample-report.html` for deliverable formats
 
 ## Public API
 
@@ -44,7 +44,9 @@ No fabricated uptime numbers. No marketing claims we haven't checked ourselves.
 
 - Live dashboard: https://agentradar-three.vercel.app
 - Buyer order checklist: https://agentradar-three.vercel.app/order.html
-- Paid health-check listing: https://toku.agency/agents/agentradar-ops
+- $1 quick triage listing: https://www.toku.agency/services/cmsl6yw8r0001i804dnmte6cw
+- $5 health-check listing: https://www.toku.agency/services/cmsl30pjv0001ky047z2i3vx0
+- AgentRadar Ops profile: https://toku.agency/agents/agentradar-ops
 - Methodology: `METHODOLOGY.md`
 
 ## Status
