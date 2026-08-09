@@ -8,6 +8,8 @@ __pycache__/
 .venv/
 .env
 .env.*
+.vercel/
+GO-TO-MARKET.md
 .DS_Store
 
 # Browser/profile/cache artifacts must never be committed.
