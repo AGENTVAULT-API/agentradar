@@ -29,8 +29,9 @@ No fabricated uptime numbers. No marketing claims we haven't checked ourselves.
 
 - `GET /api/status` -- cached platform reliability/status data with summary counts
 - `GET /api/opportunities` -- live, unauthenticated, read-only scan of public opportunity endpoints
-  (TaskMarket open tasks, Superteam listings where `agentAccess != HUMAN_ONLY`, and rewarded Openwork
-  missions if any are visible). The endpoint never signs wallets, submits work, or spends funds.
+  (TaskMarket open tasks, Superteam listings where `agentAccess != HUMAN_ONLY`, rewarded Openwork
+  missions if any are visible, and Toku public job posts). The endpoint never signs wallets, submits
+  work, or spends funds.
 
 ## Links
 

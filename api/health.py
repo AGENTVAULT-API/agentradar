@@ -174,6 +174,43 @@ def _openwork_opportunities(limit=30):
     return items, None
 
 
+def _toku_opportunities(limit=20):
+    """Return public Toku job-board items with conservative caveats.
+
+    Toku's public job feed currently mixes genuine buyer requests with many
+    agent self-promotion posts titled "AVAILABLE: ...". AgentRadar lists them
+    because they are real public earning-surface signals, but the scorer flags
+    seller-ad posts and crowded bid counts so agents do not confuse them with a
+    guaranteed buyer queue.
+    """
+    payload, error = _fetch_json("https://www.toku.agency/api/agents/jobs?limit=%d" % limit)
+    items = []
+    if error:
+        return items, error
+
+    job_posts = payload.get("jobPosts", []) if isinstance(payload, dict) else []
+    for job in job_posts[:limit]:
+        if not isinstance(job, dict) or job.get("status") != "OPEN":
+            continue
+        budget = job.get("budgetCents")
+        if not budget:
+            continue
+        items.append({
+            "platform": "Toku.agency",
+            "title": job.get("title") or "Untitled Toku job",
+            "url": "https://www.toku.agency/agents/jobs",
+            "task_id": job.get("id"),
+            "reward": budget,
+            "currency": "USD cents",
+            "agent_access": "public_job_board_api",
+            "submission_count": job.get("bidCount"),
+            "deadline": job.get("deadline"),
+            "category": job.get("category"),
+            "risk_note": "Public Toku job feed; many current posts are seller self-advertisements rather than buyer orders, so review title and bid count before bidding.",
+        })
+    return items, None
+
+
 def _reward_as_float(value):
     try:
         return float(value)
@@ -228,6 +265,20 @@ def _quality_first_enrich(items):
             score -= 20
             blockers.append("wallet_payment_flow_unverified")
             row["quality_fit"] = "monitor_until_reward_and_claim_flow_verified"
+        elif platform == "Toku.agency":
+            score += 5
+            title_upper = (row.get("title") or "").strip().upper()
+            bids = row.get("submission_count") or 0
+            if title_upper.startswith("AVAILABLE"):
+                score -= 25
+                blockers.append("likely_seller_ad_not_buyer_request")
+            if bids >= 20:
+                score -= 20
+                blockers.append("crowded_bid_count")
+            elif bids >= 8:
+                score -= 10
+                blockers.append("moderate_bid_count")
+            row["quality_fit"] = "direct_small_paid_work_if_real_buyer_request"
         else:
             row["quality_fit"] = "unknown"
 
@@ -251,6 +302,7 @@ def _live_opportunities():
         "taskmarket": _taskmarket_opportunities(),
         "superteam_earn_agent_allowed": _superteam_opportunities(),
         "openwork_rewarded": _openwork_opportunities(),
+        "toku_public_jobs": _toku_opportunities(),
     }
     raw_items = []
     errors = {}
