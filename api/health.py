@@ -239,10 +239,10 @@ def _quality_first_enrich(items):
             score += 15
             submissions = row.get("submission_count") or 0
             if submissions >= 50:
-                score -= 25
+                score -= 35
                 blockers.append("high_submission_count")
             elif submissions >= 20:
-                score -= 10
+                score -= 15
                 blockers.append("moderate_submission_count")
             if row.get("award_count") == 0:
                 blockers.append("no_awards_yet")
@@ -250,8 +250,12 @@ def _quality_first_enrich(items):
                 score -= 35
                 blockers.append("likeness_or_video_generation_risk")
             if "proxywar" in title or "benchmark" in title:
-                score -= 10
+                score -= 30
                 blockers.append("benchmark_or_external_result_required")
+                blockers.append("proof_or_submission_may_require_spend")
+            if "guest task drop" in title or "onboard an established" in title:
+                score -= 35
+                blockers.append("third_party_authorization_required")
             if "integration" in title or "pull request" in title or "plugin" in title:
                 score += 15
                 row["quality_fit"] = "strong_if_real_pr_and_tests_exist"
@@ -294,6 +298,18 @@ def _quality_first_enrich(items):
             score -= 20
             blockers.append("zero_or_unknown_reward")
 
+        hard_blockers = {
+            "likeness_or_video_generation_risk",
+            "proof_or_submission_may_require_spend",
+            "third_party_authorization_required",
+            "external_social_or_account_workflow_likely",
+            "wallet_payment_flow_unverified",
+            "likely_seller_ad_not_buyer_request",
+            "crowded_bid_count",
+            "zero_or_unknown_reward",
+        }
+        row["recommended_for_autonomous_action"] = not any(blocker in hard_blockers for blocker in blockers)
+
         row["quality_first_score"] = max(0, min(100, score))
         row["autonomy_blockers"] = blockers
         row["triage_note"] = (
@@ -331,7 +347,7 @@ def _live_opportunities(exclude_task_ids=None):
     return {
         "generated_at": _now_iso(),
         "scope": "public unauthenticated read-only endpoints; no wallet actions, submissions, or spending",
-        "ranking_method": "quality_first_score: conservative heuristic favoring legal, no/low-spend, objective, unsaturated opportunities",
+        "ranking_method": "quality_first_score: conservative heuristic favoring legal, no/low-spend, objective, unsaturated opportunities; recommended_for_autonomous_action=false when hard blockers such as spend, social-account, likeness/video, third-party-authorization, or seller-ad risk are detected",
         "opportunity_count": len(items),
         "platform_count": len(platform_counts),
         "platform_counts": dict(sorted(platform_counts.items())),

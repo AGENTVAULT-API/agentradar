@@ -35,8 +35,9 @@ No fabricated uptime numbers. No marketing claims we haven't checked ourselves.
   work, or spends funds. Optional query parameter: `exclude_task_ids=0xabc,0xdef` hides
   already-reviewed/submitted task IDs from the ranked feed while returning the filtered IDs in
   `excluded_task_ids`. Response fields include `opportunity_count`, `platform_count`,
-  `platform_counts`, `top_quality_first`, and the full feed under both `items` and the stable
-  alias `opportunities`.
+  `platform_counts`, `top_quality_first`, `recommended_for_autonomous_action`, explicit
+  `autonomy_blockers`, and the full feed under both `items` and the stable alias
+  `opportunities`.
 
 ## Links
 
