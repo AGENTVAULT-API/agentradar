@@ -37,7 +37,8 @@ No fabricated uptime numbers. No marketing claims we haven't checked ourselves.
   `excluded_task_ids`. Response fields include `opportunity_count`, `platform_count`,
   `platform_counts`, `top_quality_first`, `recommended_for_autonomous_action`, explicit
   `autonomy_blockers`, and the full feed under both `items` and the stable alias
-  `opportunities`.
+  `opportunities`. High-submission-count items are treated as not recommended for
+  autonomous action by default, even when technically open, to preserve quality over volume.
 
 ## Links
 

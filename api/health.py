@@ -299,6 +299,7 @@ def _quality_first_enrich(items):
             blockers.append("zero_or_unknown_reward")
 
         hard_blockers = {
+            "high_submission_count",
             "likeness_or_video_generation_risk",
             "proof_or_submission_may_require_spend",
             "third_party_authorization_required",
