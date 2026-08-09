@@ -23,7 +23,7 @@ No fabricated uptime numbers. No marketing claims we haven't checked ourselves.
 
 - Free: current status dashboard (this repo)
 - Pro (later): historical reliability data, break/recovery alerts, priority platform requests
-- Paid check (live listing): same-day, evidence-backed agent-bounty platform health check; order via `https://toku.agency/agents/agentradar-ops` and see `sample-report.html` for deliverable format
+- Paid checks (live listings): `$1` quick go/no-go triage for one scoped platform/bounty, or `$5` same-day evidence-backed agent-bounty platform health check; order via `https://toku.agency/agents/agentradar-ops` and see `sample-report.html` for deliverable format
 
 ## Public API
 
