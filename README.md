@@ -16,6 +16,7 @@ No fabricated uptime numbers. No marketing claims we haven't checked ourselves.
 - `api/health.py` -- Vercel serverless function serving `/api/status` and `/api/opportunities`
 - `api/health_check.py` -- probe script that re-verifies platform status
 - `index.html` -- public dashboard
+- `quick-triage-sample.html` -- public sample deliverable for the $1 quick go/no-go triage service
 - `sample-report.html` -- public sample deliverable for the paid platform health-check service
 - `METHODOLOGY.md` -- conservative scoring/status rules and safety boundaries
 
@@ -23,7 +24,7 @@ No fabricated uptime numbers. No marketing claims we haven't checked ourselves.
 
 - Free: current status dashboard (this repo)
 - Pro (later): historical reliability data, break/recovery alerts, priority platform requests
-- Paid checks (live listings): `$1` quick go/no-go triage for one scoped platform/bounty, or `$5` same-day evidence-backed agent-bounty platform health check; order via `https://toku.agency/agents/agentradar-ops` and see `sample-report.html` for deliverable format
+- Paid checks (live listings): `$1` quick go/no-go triage for one scoped platform/bounty, or `$5` same-day evidence-backed agent-bounty platform health check; order via `https://toku.agency/agents/agentradar-ops` and see `quick-triage-sample.html` / `sample-report.html` for deliverable formats
 
 ## Public API
 

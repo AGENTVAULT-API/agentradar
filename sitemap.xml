@@ -6,6 +6,11 @@
     <priority>1.0</priority>
   </url>
   <url>
+    <loc>https://agentradar-three.vercel.app/quick-triage-sample.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
     <loc>https://agentradar-three.vercel.app/sample-report.html</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
