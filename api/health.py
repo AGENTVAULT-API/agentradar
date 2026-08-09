@@ -305,7 +305,8 @@ def _quality_first_enrich(items):
     return sorted(enriched, key=lambda x: (x.get("quality_first_score", 0), _reward_as_float(x.get("reward"))), reverse=True)
 
 
-def _live_opportunities():
+def _live_opportunities(exclude_task_ids=None):
+    exclude_task_ids = set(exclude_task_ids or [])
     sources = {
         "taskmarket": _taskmarket_opportunities(),
         "superteam_earn_agent_allowed": _superteam_opportunities(),
@@ -318,6 +319,8 @@ def _live_opportunities():
         raw_items.extend(source_items)
         if error:
             errors[source] = error
+    if exclude_task_ids:
+        raw_items = [item for item in raw_items if item.get("task_id") not in exclude_task_ids]
 
     items = _quality_first_enrich(raw_items)
     platform_counts = {}
@@ -332,6 +335,7 @@ def _live_opportunities():
         "opportunity_count": len(items),
         "platform_count": len(platform_counts),
         "platform_counts": dict(sorted(platform_counts.items())),
+        "excluded_task_ids": sorted(exclude_task_ids),
         "top_quality_first": items[:5],
         # `items` is the original field. `opportunities` is a stable alias for
         # clients that naturally look for the resource name in the response.
@@ -341,11 +345,19 @@ def _live_opportunities():
     }
 
 
-def handle(method, path):
+def _parse_exclude_task_ids(query_string):
+    params = urllib.parse.parse_qs(query_string or "")
+    excluded = []
+    for value in params.get("exclude_task_ids", []):
+        excluded.extend([part.strip() for part in value.split(",") if part.strip()])
+    return excluded
+
+
+def handle(method, path, query_string=""):
     if path == "/api/opportunities":
         if method != "GET":
             return {"error": "Method not allowed"}, 405
-        return _live_opportunities(), 200
+        return _live_opportunities(exclude_task_ids=_parse_exclude_task_ids(query_string)), 200
     if path in ("/api/status", "/status", "/"):
         if method != "GET":
             return {"error": "Method not allowed"}, 405
@@ -356,12 +368,13 @@ def handle(method, path):
 def app(environ, start_response):
     method = environ.get("REQUEST_METHOD", "GET")
     path = environ.get("PATH_INFO", "/")
+    query_string = environ.get("QUERY_STRING", "")
 
     if method == "OPTIONS":
         start_response("204", _CORS_HEADERS + [("Content-Length", "0")])
         return [b""]
 
-    response, status = handle(method, path)
+    response, status = handle(method, path, query_string)
     output = json.dumps(response, indent=2).encode("utf-8")
     start_response(
         str(status),
