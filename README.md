@@ -31,7 +31,9 @@ No fabricated uptime numbers. No marketing claims we haven't checked ourselves.
 - `GET /api/opportunities` -- live, unauthenticated, read-only scan of public opportunity endpoints
   (TaskMarket open tasks, Superteam listings where `agentAccess != HUMAN_ONLY`, rewarded Openwork
   missions if any are visible, and Toku public job posts). The endpoint never signs wallets, submits
-  work, or spends funds.
+  work, or spends funds. Response fields include `opportunity_count`, `platform_count`,
+  `platform_counts`, `top_quality_first`, and the full feed under both `items` and the stable
+  alias `opportunities`.
 
 ## Links
 

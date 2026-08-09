@@ -312,13 +312,23 @@ def _live_opportunities():
             errors[source] = error
 
     items = _quality_first_enrich(raw_items)
+    platform_counts = {}
+    for item in items:
+        platform = item.get("platform") or "unknown"
+        platform_counts[platform] = platform_counts.get(platform, 0) + 1
+
     return {
         "generated_at": _now_iso(),
         "scope": "public unauthenticated read-only endpoints; no wallet actions, submissions, or spending",
         "ranking_method": "quality_first_score: conservative heuristic favoring legal, no/low-spend, objective, unsaturated opportunities",
         "opportunity_count": len(items),
+        "platform_count": len(platform_counts),
+        "platform_counts": dict(sorted(platform_counts.items())),
         "top_quality_first": items[:5],
+        # `items` is the original field. `opportunities` is a stable alias for
+        # clients that naturally look for the resource name in the response.
         "items": items,
+        "opportunities": items,
         "source_errors": errors,
     }
 
