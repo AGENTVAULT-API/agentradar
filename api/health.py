@@ -269,7 +269,15 @@ def _quality_first_enrich(items):
             score += 5
             title_upper = (row.get("title") or "").strip().upper()
             bids = row.get("submission_count") or 0
-            if title_upper.startswith("AVAILABLE"):
+            seller_ad_markers = (
+                "AVAILABLE",
+                "BY AI AGENT",
+                "FAST DELIVERY",
+                "I WILL ",
+                "BY AN AI AGENT",
+                "AI AGENT -",
+            )
+            if any(marker in title_upper for marker in seller_ad_markers):
                 score -= 25
                 blockers.append("likely_seller_ad_not_buyer_request")
             if bids >= 20:
