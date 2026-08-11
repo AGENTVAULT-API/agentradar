@@ -175,33 +175,49 @@ def _openwork_opportunities(limit=30):
 
 
 def _agentbounties_opportunities(limit=20):
-    """Return canonically claimable Agent Bounties items only.
+    """Return currently claimable Agent Bounties items from the canonical API.
 
-    Agent Bounties mirrors some GitHub issues that are already claimed,
-    verification-pending, or temporarily unavailable. For a money-making agent,
-    the safe public feed is the canonical `claimable_only=true` endpoint, not a
-    GitHub label search. This function is deliberately conservative: an empty
-    canonical feed is a valid, non-error result and means "do not claim now".
+    The public Agent Bounties feed is authoritative for on-chain status, but its
+    `claimable_only=true` convenience filter has returned an empty list while
+    the unfiltered feed contains `status: claimable` bounties. To avoid missing
+    a real zero-spend opportunity, fetch the unfiltered canonical feed and apply
+    the conservative status filter locally. This is still read-only: no wallet,
+    signature, claim, bond, or submission is performed.
     """
     payload, error = _fetch_json(
-        "https://api.agentbounties.app/v1/base/autonomous-bounties/feed?network=base-mainnet&claimable_only=true"
+        "https://api.agentbounties.app/v1/base/autonomous-bounties/feed?network=base-mainnet&claimable_only=false"
     )
     items = []
     if error:
         return items, error
 
     bounties = payload if isinstance(payload, list) else payload.get("bounties", []) if isinstance(payload, dict) else []
-    for bounty in bounties[:limit]:
-        if not isinstance(bounty, dict):
-            continue
-        title = _first(bounty.get("title"), bounty.get("goal"), bounty.get("name"), "Claimable Agent Bounties task")
-        contract = _first(bounty.get("contract"), bounty.get("contractAddress"), bounty.get("bountyContract"), bounty.get("address"))
+    claimable = [bounty for bounty in bounties if isinstance(bounty, dict) and bounty.get("status") == "claimable"]
+    for bounty in claimable[:limit]:
+        raw_terms = bounty.get("terms")
+        terms = raw_terms if isinstance(raw_terms, dict) else {}
+        raw_document = terms.get("document")
+        document = raw_document if isinstance(raw_document, dict) else {}
+        raw_metadata = document.get("metadata")
+        metadata = raw_metadata if isinstance(raw_metadata, dict) else {}
+        title = _first(
+            metadata.get("title"),
+            document.get("title"),
+            bounty.get("title"),
+            bounty.get("goal"),
+            bounty.get("name"),
+            "Claimable Agent Bounties task",
+        )
+        contract = _first(bounty.get("bounty_contract"), bounty.get("contract"), bounty.get("contractAddress"), bounty.get("bountyContract"), bounty.get("address"))
         reward = _first(
+            bounty.get("solver_reward"),
             bounty.get("solverRewardUsdc"),
             bounty.get("solverReward"),
             bounty.get("rewardUsdc"),
             bounty.get("reward"),
         )
+        claim_bond = _first(bounty.get("claim_bond"), bounty.get("claimBond"), bounty.get("bond"))
+        required_external_spend = _first(bounty.get("required_external_spend"), bounty.get("requiredExternalSpend"))
         items.append({
             "platform": "Agent Bounties",
             "title": title,
@@ -209,13 +225,15 @@ def _agentbounties_opportunities(limit=20):
                 bounty.get("url"),
                 "https://agentbounties.app/earn.html?bountyContract=%s&network=base-mainnet" % contract if contract else "https://agentbounties.app/earn.html",
             ),
-            "task_id": _first(bounty.get("id"), contract),
+            "task_id": _first(bounty.get("bounty_id"), bounty.get("id"), contract),
             "contract": contract,
             "reward": reward,
-            "currency": "USDC",
-            "agent_access": "canonical_claimable_feed",
-            "status": _first(bounty.get("lifecycle"), bounty.get("status"), "claimable"),
-            "risk_note": "Claimable-only canonical feed item; still verify bond/gas/settlement rules before signing any wallet transaction.",
+            "currency": "USDC base units",
+            "claim_bond": claim_bond,
+            "required_external_spend": required_external_spend,
+            "agent_access": "canonical_claimable_feed_local_status_filter",
+            "status": bounty.get("status"),
+            "risk_note": "Canonical API says claimable, but claiming may require Base gas and a USDC bond; do not sign until bond/spend EV is checked against realized mission balance.",
         })
     return items, None
 
@@ -357,6 +375,12 @@ def _quality_first_enrich(items):
             row["quality_fit"] = "monitor_until_reward_and_claim_flow_verified"
         elif platform == "Agent Bounties":
             score += 20
+            if _reward_as_float(row.get("claim_bond")) > 0:
+                score -= 35
+                blockers.append("claim_bond_required")
+            if _reward_as_float(row.get("required_external_spend")) > 0:
+                score -= 35
+                blockers.append("external_spend_required")
             row["quality_fit"] = "strong_if_canonical_claimable_and_bond_ev_positive"
         elif platform == "TaskBounty":
             score += 15
@@ -400,6 +424,8 @@ def _quality_first_enrich(items):
             "third_party_authorization_required",
             "external_social_or_account_workflow_likely",
             "wallet_payment_flow_unverified",
+            "claim_bond_required",
+            "external_spend_required",
             "likely_seller_ad_not_buyer_request",
             "crowded_bid_count",
             "task_not_funded",
