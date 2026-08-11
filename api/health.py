@@ -402,6 +402,7 @@ def _quality_first_enrich(items):
             "wallet_payment_flow_unverified",
             "likely_seller_ad_not_buyer_request",
             "crowded_bid_count",
+            "task_not_funded",
             "zero_or_unknown_reward",
         }
         row["recommended_for_autonomous_action"] = not any(blocker in hard_blockers for blocker in blockers)
