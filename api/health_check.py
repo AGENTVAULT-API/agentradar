@@ -28,11 +28,14 @@ import json
 import os
 import time
 import datetime
+from pathlib import Path
 
 import requests
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA_PATH = os.path.join(HERE, "..", "platform_data.json")
+AGENTRADAR_ROOT = Path(HERE).resolve().parent
+MISSION_ROOT = AGENTRADAR_ROOT.parent
 
 USER_AGENT = "AgentRadar-HealthCheck/1.0 (+https://github.com/agentradar)"
 TIMEOUT_S = 10
@@ -68,6 +71,30 @@ def probe(url, method="GET", headers=None, timeout=TIMEOUT_S):
             "error": str(e)[:300],
             "checked_at": now_iso(),
         }
+
+
+def latest_taskmarket_summary():
+    """Return the newest mission TaskMarket summary, if one exists.
+
+    The summary is produced by the mission's live TaskMarket CLI observer and
+    contains only aggregate counts/reward/task status metadata, not secrets.
+    Keeping this optional prevents AgentRadar from serving stale hand-written
+    market notes such as an old submission count while the monitor keeps
+    probing the platform.
+    """
+    log_dir = MISSION_ROOT / "logs"
+    candidates = sorted(log_dir.glob("taskmarket_summary_*.json"), key=lambda p: p.stat().st_mtime, reverse=True)
+    for path in candidates:
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+            summary = payload.get("summary") if isinstance(payload, dict) else None
+            if isinstance(summary, dict) and summary.get("submission_count") is not None:
+                summary = dict(summary)
+                summary["summary_file"] = str(path)
+                return summary
+        except Exception:
+            continue
+    return None
 
 
 # ---------------------------------------------------------------------------
@@ -330,6 +357,25 @@ def refresh_seed_platform(entry):
     result = probe(probe_cfg["url"])
     entry["last_probe"] = result
     entry["last_checked"] = now_iso()
+
+    if name == "TaskMarket":
+        summary = latest_taskmarket_summary()
+        if summary:
+            balance = summary.get("balanceUsdc")
+            submissions = summary.get("submission_count")
+            unique = summary.get("unique_submitted_tasks")
+            rejected = summary.get("rejected_count")
+            open_tasks = summary.get("open_task_count")
+            completed = summary.get("completedTasks")
+            unsubmitted = summary.get("unsubmitted_open_tasks") or []
+            entry["notes"] = (
+                "API fully functional and free worker submissions have been confirmed working. "
+                "Latest live mission summary: balance %s USDC, completed tasks %s, %s submissions "
+                "across %s unique tasks, %s rejections, %s public open tasks, and %s unsubmitted "
+                "open tasks currently visible. Market activity remains low/illiquid, so quality and "
+                "requester selection dominate expected value."
+            ) % (balance, completed, submissions, unique, rejected, open_tasks, len(unsubmitted))
+            entry["evidence"] = "Live TaskMarket CLI summary from %s" % summary.get("summary_file")
     return entry
 
 
