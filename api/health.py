@@ -220,6 +220,46 @@ def _agentbounties_opportunities(limit=20):
     return items, None
 
 
+def _taskbounty_opportunities(limit=25):
+    """Return publicly listed TaskBounty tasks.
+
+    TaskBounty exposes an unauthenticated `/api/v1/tasks` endpoint and an
+    OpenAPI document, but current live probes often return an empty task list.
+    Empty is a valid, non-error result: it means there is no autonomous action
+    to take right now, not that the platform should be ignored forever.
+    """
+    payload, error = _fetch_json("https://www.task-bounty.com/api/v1/tasks")
+    items = []
+    if error:
+        return items, error
+
+    tasks = payload if isinstance(payload, list) else payload.get("data", []) if isinstance(payload, dict) else []
+    for task in tasks[:limit]:
+        if not isinstance(task, dict):
+            continue
+        task_id = task.get("id") or task.get("slug")
+        status = task.get("status")
+        funding_status = task.get("funding_status")
+        if status and status != "OPEN":
+            continue
+        reward_cents = task.get("bounty_cents")
+        items.append({
+            "platform": "TaskBounty",
+            "title": _first(task.get("title"), task.get("short_summary"), "Untitled TaskBounty task"),
+            "url": "https://www.task-bounty.com/tasks/%s" % (task.get("slug") or task_id) if task_id else "https://www.task-bounty.com/for-agents",
+            "task_id": task_id,
+            "reward": reward_cents,
+            "currency": "USD cents",
+            "agent_access": "public_solver_api_documented",
+            "status": status,
+            "funding_status": funding_status,
+            "deadline": task.get("submission_deadline"),
+            "category": task.get("category"),
+            "risk_note": "Public solver API is documented; verify funding_status, auth, payout address setup, and any stake/gas requirements before submitting.",
+        })
+    return items, None
+
+
 def _toku_opportunities(limit=20):
     """Return public Toku job-board items with conservative caveats.
 
@@ -318,6 +358,12 @@ def _quality_first_enrich(items):
         elif platform == "Agent Bounties":
             score += 20
             row["quality_fit"] = "strong_if_canonical_claimable_and_bond_ev_positive"
+        elif platform == "TaskBounty":
+            score += 15
+            if row.get("funding_status") and row.get("funding_status") != "FUNDED":
+                score -= 35
+                blockers.append("task_not_funded")
+            row["quality_fit"] = "strong_if_funded_public_solver_task_and_no_stake"
         elif platform == "Toku.agency":
             score += 5
             title_upper = (row.get("title") or "").strip().upper()
@@ -379,6 +425,7 @@ def _live_opportunities(exclude_task_ids=None, source_filter=None):
         "superteam_earn_agent_allowed": _superteam_opportunities,
         "openwork_rewarded": _openwork_opportunities,
         "agentbounties_claimable": _agentbounties_opportunities,
+        "taskbounty_public_tasks": _taskbounty_opportunities,
         "toku_public_jobs": _toku_opportunities,
     }
     if requested_sources:
@@ -448,6 +495,9 @@ def _parse_source_filter(query_string):
         "agentbounties": "agentbounties_claimable",
         "agent bounties": "agentbounties_claimable",
         "agent-bounties": "agentbounties_claimable",
+        "taskbounty": "taskbounty_public_tasks",
+        "task bounty": "taskbounty_public_tasks",
+        "task-bounty": "taskbounty_public_tasks",
         "toku": "toku_public_jobs",
         "toku.agency": "toku_public_jobs",
     }
