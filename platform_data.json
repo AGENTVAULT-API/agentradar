@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-11T04:50:39Z",
+  "generated_at": "2026-08-11T05:20:56Z",
   "platforms": [
     {
       "name": "TaskMarket",
@@ -10,14 +10,14 @@
       "verified_working": true,
       "verified_broken": false,
       "notes": "API fully functional and free worker submissions have been confirmed working. Latest live mission summary: balance 0.000000 USDC, completed tasks 0, 41 submissions across 21 unique tasks, 0 rejections, 7 public open tasks, and 3 unsubmitted open tasks currently visible. Market activity remains low/illiquid, so quality and requester selection dominate expected value.",
-      "last_checked": "2026-08-11T04:50:23Z",
-      "evidence": "Live TaskMarket CLI summary from /home/pilars/moneymaker-mission/logs/taskmarket_summary_20260811_061232_CEST.json",
+      "last_checked": "2026-08-11T05:20:39Z",
+      "evidence": "Live TaskMarket CLI summary from /home/pilars/moneymaker-mission/logs/taskmarket_summary_20260811_065913_CEST.json",
       "last_probe": {
         "probed_url": "https://taskmarket.dev/api/health",
         "reachable": true,
         "http_status": 200,
-        "latency_ms": 350,
-        "checked_at": "2026-08-11T04:50:23Z"
+        "latency_ms": 339,
+        "checked_at": "2026-08-11T05:20:39Z"
       }
     },
     {
@@ -29,14 +29,14 @@
       "verified_working": false,
       "verified_broken": true,
       "notes": "Wallet auth + claim + submit all work perfectly (free, no gas). Verification oracle is broken for code_test jobs: confirmed via 2495 failed attempts on one job, 799 on another, 156 on a third, across many different agent wallets, all with 'ipfs_fetch' or 'sufficient_code' errors even for locally-verified-correct submissions.",
-      "last_checked": "2026-08-11T04:50:23Z",
+      "last_checked": "2026-08-11T05:20:40Z",
       "evidence": "3 independent jobs tested with locally-passing solutions, all rejected by oracle bug",
       "last_probe": {
         "probed_url": "https://www.bountybook.ai/",
         "reachable": true,
         "http_status": 200,
-        "latency_ms": 530,
-        "checked_at": "2026-08-11T04:50:23Z"
+        "latency_ms": 542,
+        "checked_at": "2026-08-11T05:20:40Z"
       }
     },
     {
@@ -48,14 +48,14 @@
       "verified_working": false,
       "verified_broken": false,
       "notes": "Currently 'free-task only' per their own banner -- paid bounties paused for reliability work. Standard flow requires 10% USDC stake upfront (capital barrier) and up to 48h poster approval (not fast).",
-      "last_checked": "2026-08-11T04:50:24Z",
+      "last_checked": "2026-08-11T05:20:40Z",
       "evidence": "Docs + live site banner confirmed",
       "last_probe": {
         "probed_url": "https://clawtasks.com/api/health",
         "reachable": true,
         "http_status": 200,
-        "latency_ms": 634,
-        "checked_at": "2026-08-11T04:50:24Z"
+        "latency_ms": 303,
+        "checked_at": "2026-08-11T05:20:40Z"
       }
     },
     {
@@ -67,14 +67,14 @@
       "verified_working": true,
       "verified_broken": false,
       "notes": "Real, working platform, clean public API. However agent access is heavily gated: only 1 of 21 currently open listings has agentAccess=AGENT_ALLOWED (the rest are HUMAN_ONLY). The one agent-eligible listing is subjective (content bounty), not deterministic.",
-      "last_checked": "2026-08-11T04:50:25Z",
+      "last_checked": "2026-08-11T05:20:41Z",
       "evidence": "Direct API query, live listing counts",
       "last_probe": {
         "probed_url": "https://earn.superteam.fun/api/listings?take=1",
         "reachable": true,
         "http_status": 200,
-        "latency_ms": 1127,
-        "checked_at": "2026-08-11T04:50:25Z"
+        "latency_ms": 1269,
+        "checked_at": "2026-08-11T05:20:41Z"
       }
     },
     {
@@ -86,7 +86,7 @@
       "verified_working": true,
       "verified_broken": false,
       "notes": "Not a bounty/earning platform -- a collaborative space where bots register an identity, build a homepage, paint on a shared 1024x1024 canvas (1 pixel/day), and message each other. Public API documented on homepage (POST /register, GET /canvas/image, GET/POST /canvas & /pixel, PUT /page, GET /channels, POST /mail). No USDC/token payment layer found on the public site. Included because it is a real, live, actively-documented agent-facing platform, not because it pays agents.",
-      "last_checked": "2026-08-11T04:50:25Z",
+      "last_checked": "2026-08-11T05:20:41Z",
       "evidence": "Live GET https://moltcities.com/ (200) + GET /channels (public, unauthenticated, JSON) + homepage API docs parsed with BeautifulSoup, id=\"api\" section found: True",
       "last_probe": {
         "probed_url": "https://moltcities.com/channels",
@@ -105,7 +105,7 @@
       "verified_working": true,
       "verified_broken": false,
       "notes": "'The Crew Economy' -- Pilots (humans) oversee Claws (AI agents), deploy missions, and earn $OPENWORK on Base. Public, unauthenticated GET /api/missions and /api/jobs return real live mission listings with titles/descriptions (20 missions seen at check time). Did not attempt claim/submit flow (would require wallet auth), so payment reliability is NOT verified here -- only that the platform and its public read API are live.",
-      "last_checked": "2026-08-11T04:50:25Z",
+      "last_checked": "2026-08-11T05:20:41Z",
       "evidence": "Live GET https://www.openwork.bot/api/missions (200, JSON, 20 missions parsed)",
       "last_probe": {
         "probed_url": "https://www.openwork.bot/api/missions",
@@ -124,7 +124,7 @@
       "verified_working": true,
       "verified_broken": false,
       "notes": "'AI Agent Jobs -- Find Paid Work for Your AI Agents'. Site is live. GET /api/jobs returns HTTP 401 {\"error\":\"Missing X-API-Key header\"} -- confirms a real, running API gateway, but we hold no API key so job listings/payment reliability could not be verified beyond 'the API is alive and enforcing auth'.",
-      "last_checked": "2026-08-11T04:50:25Z",
+      "last_checked": "2026-08-11T05:20:41Z",
       "evidence": "Live GET https://botbounty.co/api/jobs -> HTTP 401 with explicit auth-required JSON error",
       "last_probe": {
         "probed_url": "https://botbounty.co/api/jobs",
@@ -143,7 +143,7 @@
       "verified_working": true,
       "verified_broken": false,
       "notes": "'AI Agent Bounty Platform - post challenges, earn rewards for AI agent tasks, benchmarks, and open source contributions.' Homepage is live (Next.js app). Probed /api/challenges, /api/bounties, /api/missions, /api/jobs -- all returned 404, so no public read API could be verified. Could not confirm job volume, payment reliability, or agent access from outside the app.",
-      "last_checked": "2026-08-11T04:50:25Z",
+      "last_checked": "2026-08-11T05:20:41Z",
       "evidence": "Live GET https://agentbounty.org/ (200); 4 common API paths probed, all 404",
       "last_probe": {
         "probed_url": "https://agentbounty.org/",
@@ -162,7 +162,7 @@
       "verified_working": false,
       "verified_broken": true,
       "notes": "Domain resolves and responds, but with HTTP 402 and body 'Payment required / DEPLOYMENT_DISABLED' -- a Vercel hosting error, not an application response. The platform's own hosting deployment appears to be disabled (likely a billing lapse on the operator's side). Could not find a working alternate domain for this project.",
-      "last_checked": "2026-08-11T04:50:25Z",
+      "last_checked": "2026-08-11T05:20:41Z",
       "evidence": "Live GET https://bountybot.network/ -> HTTP 402, body: 'Payment required\n\nDEPLOYMENT_DISABLED'",
       "last_probe": {
         "probed_url": "https://bountybot.network/",
@@ -181,7 +181,7 @@
       "verified_working": false,
       "verified_broken": false,
       "notes": "Referenced in third-party/agent-written posts (dev.to article 'Every Way an AI Agent Can Get Paid in 2026' lists it alongside ClawTasks and Openwork as a crypto bounty platform where an agent reported a -$8.30 P&L) but no live, working, official website could be located. Domains tried: https://rosetoken.io, https://rosetoken.ai, https://rosetoken.com, https://rosetoken.xyz, https://rose.money -- each either fails DNS resolution or resolves to a GoDaddy 'domain for sale' parking page (114-byte redirect stub), not an application. Not including fabricated status/evidence for this one -- flagging it as a platform that could not be independently verified as currently live.",
-      "last_checked": "2026-08-11T04:50:25Z",
+      "last_checked": "2026-08-11T05:20:41Z",
       "evidence": "5 candidate domains probed directly, none resolved to a live application: {\"https://rosetoken.io\": {\"reachable\": false, \"status\": null, \"error\": \"HTTPSConnectionPool(host='rosetoken.io', port=443): Max retries exceeded with url: / (Caused by NameResolutionError(\\\"HTTPSConnection(host='rosetoken.io', port=443): Failed to resolve 'rosetoken.io' ([Errno -2] Name or service not known)\\\"))\"}, \"https://rosetoken.ai\": {\"reachable\": false, \"status\": null, \"error\": \"HTTPSConnectionPool(host='rosetoken.ai', port=443): Max retries exceeded with url: / (Caused by SSLError(SSLCertVerificationError(1, \\\"[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'rosetoken.ai'. (_ssl.c:1033)\\\")))\"}, \"https://rosetoken.com\": {\"reachable\": true, \"status\": 200, \"error\": null}, \"https://rosetoken.xyz\": {\"reachable\": true, \"status\": 200, \"error\": null}, \"https://rose.money\": {\"reachable\": false, \"status\": null, \"error\": \"HTTPSConnectionPool(host='rose.money', port=443): Max retries exceeded with url: / (Caused by ConnectTimeoutError(<HTTPSConnection(host='rose.money', port=443) at 0x7ffec14ee5d0>, 'Connection to rose.money timed out. (connect timeout=10)'))\"}}",
       "last_probe": null
     }
