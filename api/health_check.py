@@ -309,6 +309,55 @@ def research_new_platforms():
         "last_probe": feed_probe,
     })
 
+    # --- TaskBounty (task-bounty.com) ----------------------------------------
+    # Newly discovered via live web search. Unlike many agent-bounty sites, it
+    # publishes an OpenAPI document plus an unauthenticated read-only task list.
+    # The current task list can legitimately be empty; health tracking records
+    # the API surface separately from any claim/submit/auth/payout attempt.
+    taskbounty_tasks_url = "https://www.task-bounty.com/api/v1/tasks"
+    taskbounty_openapi_url = "https://www.task-bounty.com/api/v1/openapi.json"
+    tasks_probe = probe(taskbounty_tasks_url)
+    openapi_probe = probe(taskbounty_openapi_url)
+    task_count = None
+    has_solver_paths = False
+    if tasks_probe.get("reachable") and tasks_probe.get("http_status") == 200:
+        try:
+            payload = requests.get(taskbounty_tasks_url, headers={"User-Agent": USER_AGENT}, timeout=TIMEOUT_S).json()
+            task_count = len(payload) if isinstance(payload, list) else len(payload.get("data", [])) if isinstance(payload, dict) else None
+        except Exception:
+            task_count = None
+    if openapi_probe.get("reachable") and openapi_probe.get("http_status") == 200:
+        try:
+            spec = requests.get(taskbounty_openapi_url, headers={"User-Agent": USER_AGENT}, timeout=TIMEOUT_S).json()
+            paths = spec.get("paths", {}) if isinstance(spec, dict) else {}
+            has_solver_paths = "/tasks" in paths and "/submissions" in paths and "/agents" in paths
+        except Exception:
+            has_solver_paths = False
+    working = tasks_probe.get("reachable") and tasks_probe.get("http_status") == 200 and task_count is not None and has_solver_paths
+    new_platforms.append({
+        "name": "TaskBounty",
+        "url": "https://www.task-bounty.com/for-agents",
+        "chain": None,
+        "currency": "USDC / crypto payout options advertised",
+        "status": "operational_public_solver_api_empty" if working and task_count == 0 else ("operational_public_solver_api" if working else "unreachable_or_changed_api"),
+        "verified_working": bool(working),
+        "verified_broken": not bool(working),
+        "notes": (
+            "Public agent-facing bounty platform. Live GET /api/v1/tasks returned %s tasks and "
+            "OpenAPI exposes solver-relevant paths (/auth/register, /tasks, /tasks/{id}/access, "
+            "/agents, /submissions). No claim, registration, payout-address setup, or submission was "
+            "attempted; current public task list is empty, so this is monitor-only until funded tasks appear."
+            if working else
+            "TaskBounty public task list or OpenAPI document did not respond as expected during this check."
+        ) % task_count if working else "TaskBounty public task list or OpenAPI document did not respond as expected during this check.",
+        "last_checked": now_iso(),
+        "evidence": "Live GET %s -> HTTP %s, task_count=%s; GET %s -> HTTP %s, solver_paths=%s" % (
+            taskbounty_tasks_url, tasks_probe.get("http_status"), task_count,
+            taskbounty_openapi_url, openapi_probe.get("http_status"), has_solver_paths,
+        ),
+        "last_probe": tasks_probe,
+    })
+
     # --- BountyBot Network (bountybot.network) ------------------------------
     # Real, registered domain -- but the deployment itself is down. Verified
     # by direct probe: the platform returns HTTP 402 "Payment required /
