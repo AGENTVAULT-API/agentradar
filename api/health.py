@@ -174,6 +174,52 @@ def _openwork_opportunities(limit=30):
     return items, None
 
 
+def _agentbounties_opportunities(limit=20):
+    """Return canonically claimable Agent Bounties items only.
+
+    Agent Bounties mirrors some GitHub issues that are already claimed,
+    verification-pending, or temporarily unavailable. For a money-making agent,
+    the safe public feed is the canonical `claimable_only=true` endpoint, not a
+    GitHub label search. This function is deliberately conservative: an empty
+    canonical feed is a valid, non-error result and means "do not claim now".
+    """
+    payload, error = _fetch_json(
+        "https://api.agentbounties.app/v1/base/autonomous-bounties/feed?network=base-mainnet&claimable_only=true"
+    )
+    items = []
+    if error:
+        return items, error
+
+    bounties = payload if isinstance(payload, list) else payload.get("bounties", []) if isinstance(payload, dict) else []
+    for bounty in bounties[:limit]:
+        if not isinstance(bounty, dict):
+            continue
+        title = _first(bounty.get("title"), bounty.get("goal"), bounty.get("name"), "Claimable Agent Bounties task")
+        contract = _first(bounty.get("contract"), bounty.get("contractAddress"), bounty.get("bountyContract"), bounty.get("address"))
+        reward = _first(
+            bounty.get("solverRewardUsdc"),
+            bounty.get("solverReward"),
+            bounty.get("rewardUsdc"),
+            bounty.get("reward"),
+        )
+        items.append({
+            "platform": "Agent Bounties",
+            "title": title,
+            "url": _first(
+                bounty.get("url"),
+                "https://agentbounties.app/earn.html?bountyContract=%s&network=base-mainnet" % contract if contract else "https://agentbounties.app/earn.html",
+            ),
+            "task_id": _first(bounty.get("id"), contract),
+            "contract": contract,
+            "reward": reward,
+            "currency": "USDC",
+            "agent_access": "canonical_claimable_feed",
+            "status": _first(bounty.get("lifecycle"), bounty.get("status"), "claimable"),
+            "risk_note": "Claimable-only canonical feed item; still verify bond/gas/settlement rules before signing any wallet transaction.",
+        })
+    return items, None
+
+
 def _toku_opportunities(limit=20):
     """Return public Toku job-board items with conservative caveats.
 
@@ -269,6 +315,9 @@ def _quality_first_enrich(items):
             score -= 20
             blockers.append("wallet_payment_flow_unverified")
             row["quality_fit"] = "monitor_until_reward_and_claim_flow_verified"
+        elif platform == "Agent Bounties":
+            score += 20
+            row["quality_fit"] = "strong_if_canonical_claimable_and_bond_ev_positive"
         elif platform == "Toku.agency":
             score += 5
             title_upper = (row.get("title") or "").strip().upper()
@@ -329,6 +378,7 @@ def _live_opportunities(exclude_task_ids=None, source_filter=None):
         "taskmarket": _taskmarket_opportunities,
         "superteam_earn_agent_allowed": _superteam_opportunities,
         "openwork_rewarded": _openwork_opportunities,
+        "agentbounties_claimable": _agentbounties_opportunities,
         "toku_public_jobs": _toku_opportunities,
     }
     if requested_sources:
@@ -395,6 +445,9 @@ def _parse_source_filter(query_string):
         "superteam_earn": "superteam_earn_agent_allowed",
         "superteam earn": "superteam_earn_agent_allowed",
         "openwork": "openwork_rewarded",
+        "agentbounties": "agentbounties_claimable",
+        "agent bounties": "agentbounties_claimable",
+        "agent-bounties": "agentbounties_claimable",
         "toku": "toku_public_jobs",
         "toku.agency": "toku_public_jobs",
     }
