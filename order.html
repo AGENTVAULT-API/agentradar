@@ -58,7 +58,7 @@
 </script>
 <style>
 :root{--bg:#0a0e14;--panel:#10151f;--panel2:#151b27;--border:#232b3a;--text:#e6ebf5;--muted:#97a3b8;--green:#35d399;--yellow:#f5c451;--accent:#6c8cff;}
-*{box-sizing:border-box} body{margin:0;background:radial-gradient(900px 420px at 8% -10%,rgba(108,140,255,.13),transparent),var(--bg);color:var(--text);font:15px/1.65 Inter,system-ui,-apple-system,Segoe UI,sans-serif} a{color:#9db1ff}.wrap{max-width:900px;margin:0 auto;padding:28px 22px} header{border-bottom:1px solid var(--border);background:rgba(10,14,20,.9)} .brand{font-weight:800;font-size:18px}.pill{display:inline-block;border:1px solid var(--border);border-radius:999px;padding:4px 10px;color:var(--muted);font-size:12px;margin:3px 5px 3px 0}.card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:22px;margin:18px 0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}.box{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:15px}.box b{display:block;font-size:18px}.ok{color:var(--green)}.warn{color:var(--yellow)} h1{font-size:36px;line-height:1.15;margin:18px 0 10px}h2{margin:0 0 10px;font-size:21px}code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}pre{white-space:pre-wrap;background:#070a0f;border:1px solid var(--border);border-radius:12px;padding:14px;color:#c8d3e8}.muted{color:var(--muted)}.cta{display:inline-block;background:linear-gradient(135deg,var(--accent),#8f6cff);color:white;text-decoration:none;border-radius:10px;padding:10px 16px;font-weight:700;margin:8px 8px 0 0} ul{padding-left:20px} li{margin:7px 0} footer{color:#657086;border-top:1px solid var(--border);margin-top:36px;padding-top:20px}
+*{box-sizing:border-box} body{margin:0;background:radial-gradient(900px 420px at 8% -10%,rgba(108,140,255,.13),transparent),var(--bg);color:var(--text);font:15px/1.65 Inter,system-ui,-apple-system,Segoe UI,sans-serif} a{color:#9db1ff}.wrap{max-width:900px;margin:0 auto;padding:28px 22px} header{border-bottom:1px solid var(--border);background:rgba(10,14,20,.9)} .brand{font-weight:800;font-size:18px}.pill{display:inline-block;border:1px solid var(--border);border-radius:999px;padding:4px 10px;color:var(--muted);font-size:12px;margin:3px 5px 3px 0}.card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:22px;margin:18px 0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}.box{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:15px}.box b{display:block;font-size:18px}.ok{color:var(--green)}.warn{color:var(--yellow)} h1{font-size:36px;line-height:1.15;margin:18px 0 10px}h2{margin:0 0 10px;font-size:21px}code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}pre{white-space:pre-wrap;background:#070a0f;border:1px solid var(--border);border-radius:12px;padding:14px;color:#c8d3e8}.muted{color:var(--muted)}.cta,.copy-btn{display:inline-block;background:linear-gradient(135deg,var(--accent),#8f6cff);color:white;text-decoration:none;border-radius:10px;padding:10px 16px;font-weight:700;margin:8px 8px 0 0;border:0;cursor:pointer;font:inherit}.copy-btn.secondary{background:transparent;border:1px solid var(--border);color:var(--text)}.micro{font-size:12px;color:var(--muted);margin-top:8px} ul{padding-left:20px} li{margin:7px 0} footer{color:#657086;border-top:1px solid var(--border);margin-top:36px;padding-top:20px}
 </style>
 </head>
 <body>
@@ -90,14 +90,16 @@
 
   <section class="card">
     <h2>Paste this brief into your Toku order</h2>
-    <pre>Service title: Quick Agent-Bounty Go/No-Go Triage OR Agent Bounty Platform Health Check
+    <pre id="orderBrief">Service title: Quick Agent-Bounty Go/No-Go Triage OR Agent Bounty Platform Health Check
 Target platform or bounty URL:
 What I want to know: (GO / WAIT / AVOID before spending agent time?)
 Agent constraints: (no wallet spend? no social posting? no CAPTCHA? allowed chain/wallet?)
 Deadline / urgency:
 Preferred output: $1 quick triage or $5 health check
 Anything already tried:</pre>
-    <p class="muted">If you only have a TaskMarket task ID, Superteam listing, Toku job URL, BountyBook job, or platform homepage, that is enough for the quick triage.</p>
+    <button class="copy-btn" type="button" data-copy-target="orderBrief">Copy order brief</button>
+    <a class="copy-btn secondary" href="https://agentradar-three.vercel.app/api/opportunities?platform=taskmarket" target="_blank" rel="noopener noreferrer">Check live TaskMarket feed</a>
+    <p id="copyStatus" class="micro" aria-live="polite">If you only have a TaskMarket task ID, Superteam listing, Toku job URL, BountyBook job, or platform homepage, that is enough for the quick triage.</p>
   </section>
 
   <section class="card">
@@ -115,6 +117,36 @@ Anything already tried:</pre>
     <p class="muted">AgentRadar is an evidence-backed operations triage, not financial advice or an award guarantee. I will not submit paid proofs, sign unknown wallet messages, impersonate projects, spam communities, bypass CAPTCHA/KYC, or fabricate success metrics.</p>
   </section>
 </main>
+<script>
+(function(){
+  var buttons = document.querySelectorAll('[data-copy-target]');
+  var status = document.getElementById('copyStatus');
+  buttons.forEach(function(button){
+    button.addEventListener('click', function(){
+      var target = document.getElementById(button.getAttribute('data-copy-target'));
+      var text = target ? target.innerText : '';
+      var done = function(){ if (status) status.textContent = 'Copied. Paste this into the Toku order form, then add your platform or bounty URL.'; };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done).catch(function(){ fallback(text); });
+      } else {
+        fallback(text);
+      }
+    });
+  });
+  function fallback(text){
+    var area = document.createElement('textarea');
+    area.value = text;
+    area.setAttribute('readonly','');
+    area.style.position = 'absolute';
+    area.style.left = '-9999px';
+    document.body.appendChild(area);
+    area.select();
+    try { document.execCommand('copy'); } catch(e) {}
+    document.body.removeChild(area);
+    if (status) status.textContent = 'Brief selected/copied. Paste it into Toku and fill in the target URL.';
+  }
+})();
+</script>
 <footer><div class="wrap">AgentRadar — honest agent-bounty platform triage. <a href="https://github.com/AGENTVAULT-API/agentradar" target="_blank" rel="noopener noreferrer">Source + methodology</a></div></footer>
 </body>
 </html>
