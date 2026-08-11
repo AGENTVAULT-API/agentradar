@@ -322,17 +322,21 @@ def _quality_first_enrich(items):
     return sorted(enriched, key=lambda x: (x.get("quality_first_score", 0), _reward_as_float(x.get("reward"))), reverse=True)
 
 
-def _live_opportunities(exclude_task_ids=None):
+def _live_opportunities(exclude_task_ids=None, source_filter=None):
     exclude_task_ids = set(exclude_task_ids or [])
-    sources = {
-        "taskmarket": _taskmarket_opportunities(),
-        "superteam_earn_agent_allowed": _superteam_opportunities(),
-        "openwork_rewarded": _openwork_opportunities(),
-        "toku_public_jobs": _toku_opportunities(),
+    requested_sources = set(source_filter or [])
+    source_factories = {
+        "taskmarket": _taskmarket_opportunities,
+        "superteam_earn_agent_allowed": _superteam_opportunities,
+        "openwork_rewarded": _openwork_opportunities,
+        "toku_public_jobs": _toku_opportunities,
     }
+    if requested_sources:
+        source_factories = {name: factory for name, factory in source_factories.items() if name in requested_sources}
     raw_items = []
     errors = {}
-    for source, (source_items, error) in sources.items():
+    for source, factory in source_factories.items():
+        source_items, error = factory()
         raw_items.extend(source_items)
         if error:
             errors[source] = error
@@ -370,11 +374,43 @@ def _parse_exclude_task_ids(query_string):
     return excluded
 
 
+def _parse_source_filter(query_string):
+    """Map optional `platform=` query values to concrete live-opportunity sources.
+
+    This keeps `/api/opportunities?platform=taskmarket` fast and reliable for
+    callers who only want TaskMarket: a slow unrelated upstream such as Toku
+    should not add `source_errors` or latency to a filtered TaskMarket query.
+    Unknown platform names deliberately return an empty filter, preserving the
+    historical all-sources behavior instead of surprising callers with no data.
+    """
+    params = urllib.parse.parse_qs(query_string or "")
+    aliases = {
+        "taskmarket": "taskmarket",
+        "superteam": "superteam_earn_agent_allowed",
+        "superteam_earn": "superteam_earn_agent_allowed",
+        "superteam earn": "superteam_earn_agent_allowed",
+        "openwork": "openwork_rewarded",
+        "toku": "toku_public_jobs",
+        "toku.agency": "toku_public_jobs",
+    }
+    sources = []
+    for value in params.get("platform", []) + params.get("source", []):
+        for part in value.split(","):
+            key = part.strip().lower().replace("_", " ")
+            source = aliases.get(key) or aliases.get(key.replace(" ", "_"))
+            if source and source not in sources:
+                sources.append(source)
+    return sources
+
+
 def handle(method, path, query_string=""):
     if path == "/api/opportunities":
         if method != "GET":
             return {"error": "Method not allowed"}, 405
-        return _live_opportunities(exclude_task_ids=_parse_exclude_task_ids(query_string)), 200
+        return _live_opportunities(
+            exclude_task_ids=_parse_exclude_task_ids(query_string),
+            source_filter=_parse_source_filter(query_string),
+        ), 200
     if path in ("/api/status", "/status", "/"):
         if method != "GET":
             return {"error": "Method not allowed"}, 405
