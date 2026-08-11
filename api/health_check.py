@@ -274,19 +274,24 @@ def research_new_platforms():
     })
 
     # --- Agent Bounties (agentbounties.app) ---------------------------------
-    # Canonical on-chain bounty surface with a public claimable-only feed. This
-    # is distinct from agentbounty.org: GitHub issue mirrors can be stale or
-    # already claimed, while this endpoint is the conservative source for work
-    # that can currently be claimed.
-    feed_url = "https://api.agentbounties.app/v1/base/autonomous-bounties/feed?network=base-mainnet&claimable_only=true"
+    # Canonical on-chain bounty surface with a public feed. The API's
+    # claimable_only=true shortcut has intermittently returned an empty list
+    # while the unfiltered canonical feed contained status=claimable bounties,
+    # so health tracking probes the unfiltered endpoint and counts claimable
+    # statuses locally. This remains read-only and does not sign/claim/bond.
+    feed_url = "https://api.agentbounties.app/v1/base/autonomous-bounties/feed?network=base-mainnet&claimable_only=false"
     feed_probe = probe(feed_url)
     claimable_count = None
+    total_count = None
     if feed_probe.get("reachable") and feed_probe.get("http_status") == 200:
         try:
             payload = requests.get(feed_url, headers={"User-Agent": USER_AGENT}, timeout=TIMEOUT_S).json()
-            claimable_count = len(payload) if isinstance(payload, list) else len(payload.get("bounties", [])) if isinstance(payload, dict) else None
+            bounties = payload if isinstance(payload, list) else payload.get("bounties", []) if isinstance(payload, dict) else []
+            total_count = len(bounties)
+            claimable_count = sum(1 for bounty in bounties if isinstance(bounty, dict) and bounty.get("status") == "claimable")
         except Exception:
             claimable_count = None
+            total_count = None
     working = feed_probe.get("reachable") and feed_probe.get("http_status") == 200 and claimable_count is not None
     new_platforms.append({
         "name": "Agent Bounties",
@@ -297,15 +302,15 @@ def research_new_platforms():
         "verified_working": bool(working),
         "verified_broken": not bool(working),
         "notes": (
-            "Canonical Base/USDC autonomous bounty surface. Public claimable-only feed is reachable "
-            "and currently returns %s claimable items. Treat GitHub mirrored issues as discovery only: "
-            "claim/sign/settle authority remains the canonical API/contract, and bond/gas EV must be "
-            "checked before wallet actions."
+            "Canonical Base/USDC autonomous bounty surface. Public feed is reachable, currently "
+            "returns %s total bounties with %s status=claimable items. AgentRadar blocks autonomous "
+            "action while claim bonds or required external spend exceed realized mission funds; GitHub "
+            "mirrored issues remain discovery only."
             if working else
-            "Claimable-only API did not return a parseable public feed during this check."
-        ) % claimable_count if working else "Claimable-only API did not return a parseable public feed during this check.",
+            "Agent Bounties API did not return a parseable public feed during this check."
+        ) % (total_count, claimable_count) if working else "Agent Bounties API did not return a parseable public feed during this check.",
         "last_checked": now_iso(),
-        "evidence": "Live GET %s -> HTTP %s, parsed claimable_count=%s" % (feed_url, feed_probe.get("http_status"), claimable_count),
+        "evidence": "Live GET %s -> HTTP %s, parsed total_count=%s, status_claimable_count=%s" % (feed_url, feed_probe.get("http_status"), total_count, claimable_count),
         "last_probe": feed_probe,
     })
 
