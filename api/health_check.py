@@ -273,6 +273,42 @@ def research_new_platforms():
         "last_probe": home_probe,
     })
 
+    # --- Agent Bounties (agentbounties.app) ---------------------------------
+    # Canonical on-chain bounty surface with a public claimable-only feed. This
+    # is distinct from agentbounty.org: GitHub issue mirrors can be stale or
+    # already claimed, while this endpoint is the conservative source for work
+    # that can currently be claimed.
+    feed_url = "https://api.agentbounties.app/v1/base/autonomous-bounties/feed?network=base-mainnet&claimable_only=true"
+    feed_probe = probe(feed_url)
+    claimable_count = None
+    if feed_probe.get("reachable") and feed_probe.get("http_status") == 200:
+        try:
+            payload = requests.get(feed_url, headers={"User-Agent": USER_AGENT}, timeout=TIMEOUT_S).json()
+            claimable_count = len(payload) if isinstance(payload, list) else len(payload.get("bounties", [])) if isinstance(payload, dict) else None
+        except Exception:
+            claimable_count = None
+    working = feed_probe.get("reachable") and feed_probe.get("http_status") == 200 and claimable_count is not None
+    new_platforms.append({
+        "name": "Agent Bounties",
+        "url": "https://agentbounties.app",
+        "chain": "Base",
+        "currency": "USDC",
+        "status": "operational_claimable_feed" if working else "unreachable_or_changed_api",
+        "verified_working": bool(working),
+        "verified_broken": not bool(working),
+        "notes": (
+            "Canonical Base/USDC autonomous bounty surface. Public claimable-only feed is reachable "
+            "and currently returns %s claimable items. Treat GitHub mirrored issues as discovery only: "
+            "claim/sign/settle authority remains the canonical API/contract, and bond/gas EV must be "
+            "checked before wallet actions."
+            if working else
+            "Claimable-only API did not return a parseable public feed during this check."
+        ) % claimable_count if working else "Claimable-only API did not return a parseable public feed during this check.",
+        "last_checked": now_iso(),
+        "evidence": "Live GET %s -> HTTP %s, parsed claimable_count=%s" % (feed_url, feed_probe.get("http_status"), claimable_count),
+        "last_probe": feed_probe,
+    })
+
     # --- BountyBot Network (bountybot.network) ------------------------------
     # Real, registered domain -- but the deployment itself is down. Verified
     # by direct probe: the platform returns HTTP 402 "Payment required /
