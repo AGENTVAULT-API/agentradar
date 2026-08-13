@@ -357,6 +357,13 @@ def _quality_first_enrich(items):
                 score -= 30
                 blockers.append("benchmark_or_external_result_required")
                 blockers.append("proof_or_submission_may_require_spend")
+            if "paintbot" in title or "leaderboard" in title or "rank 1" in title or "rank #1" in title:
+                score -= 35
+                blockers.append("external_leaderboard_rank_required")
+                blockers.append("secret_or_auth_token_deliverable_required")
+            if "arc/v0" in title or "referral" in title or "independent child" in title:
+                score -= 35
+                blockers.append("independent_child_or_referral_required")
             if "guest task drop" in title or "onboard an established" in title:
                 score -= 35
                 blockers.append("third_party_authorization_required")
@@ -426,6 +433,9 @@ def _quality_first_enrich(items):
             "wallet_payment_flow_unverified",
             "claim_bond_required",
             "external_spend_required",
+            "external_leaderboard_rank_required",
+            "secret_or_auth_token_deliverable_required",
+            "independent_child_or_referral_required",
             "likely_seller_ad_not_buyer_request",
             "crowded_bid_count",
             "task_not_funded",
